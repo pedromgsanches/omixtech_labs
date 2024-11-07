@@ -1,0 +1,5 @@
+[mysqld]
+datadir = {{ mariadb_data_dir }}
+log_error = {{ mariadb_logs_dir }}/error.log
+pid_file = /var/run/mariadb/mariadb.pid
+socket = {{ mariadb_conf_dir }}/mysql.sock

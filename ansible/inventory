@@ -1,0 +1,6 @@
+[dbsrv]
+dbsrv01
+dbsrv02
+dbsrv03
+
+# alternativa: dbsrv0[1:3:1]

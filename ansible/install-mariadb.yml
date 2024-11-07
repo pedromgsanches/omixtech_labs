@@ -1,0 +1,117 @@
+---
+- name: Instanciar MariaDB em servidores remotos
+  hosts: dbsrv
+  become: true
+  vars:
+    mariadb_version: "11.5.2"
+    mariadb_tarball: "mariadb-{{ mariadb_version }}-linux-systemd-x86_64.tar.gz"
+    mariadb_install_dir: "/opt/mariadb"
+    mariadb_data_dir: "{{ mariadb_install_dir }}/data"
+    mariadb_logs_dir: "{{ mariadb_install_dir }}/logs"
+    mariadb_conf_dir: "{{ mariadb_install_dir }}/conf"
+    mariadb_symlink: "{{ mariadb_install_dir }}/bin"
+    mariadb_var_run: "/var/run/mariadb"
+    my_cnf_template: "my.cnf.j2"
+
+  tasks:
+    - name: Criar grupo Linux mysql # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/group_module.html
+      tags: preinstall
+      group:
+        name: mysql
+        state: present
+
+    - name: Instalar os pacotes libncurses* via dnf
+      tags: preinstall
+      dnf:
+        name: "libncurses*"
+        state: present
+
+    - name: Criar utilizador mysql
+      tags: preinstall
+      user:
+        name: mysql
+        group: mysql
+        home: /nonexistent
+        shell: /sbin/nologin
+        system: yes
+        state: present
+
+
+    - name: Criar pastas mariadb
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: mysql
+        group: mysql
+        mode: '0755'
+      loop:
+        - "{{ mariadb_data_dir }}"
+        - "{{ mariadb_logs_dir }}"
+        - "{{ mariadb_conf_dir }}"
+        - "{{ mariadb_var_run }}"
+
+    - name: Copiar o tarball do MariaDB para o servidor remoto
+      tags: preinstall
+      copy:
+        src: "{{ mariadb_tarball }}"
+        dest: "{{ mariadb_install_dir }}/"
+        mode: '0644'
+
+    - name: Descompactar o tarball do MariaDB
+      tags: preinstall
+      unarchive:
+        src: "{{ mariadb_install_dir }}/{{ mariadb_tarball }}"
+        dest: "{{ mariadb_install_dir }}"
+        remote_src: true
+        creates: "{{ mariadb_install_dir }}/mariadb-{{ mariadb_version }}-linux-systemd-x86_64"
+
+    - name: Criar symlink para o diretório bin
+      file:
+        src: "{{ mariadb_install_dir }}/mariadb-{{ mariadb_version }}-linux-systemd-x86_64"
+        dest: "{{ mariadb_symlink }}"
+        state: link
+
+    - name: Copiar o template Jinja do arquivo my.cnf # copiar um ficheiro com base num template em disco e com recurso a Jinja (https://jinja.palletsprojects.com/en/stable/)
+      template:
+        src: "{{ my_cnf_template }}"
+        dest: "{{ mariadb_conf_dir }}/my.cnf"
+        owner: mysql
+        group: mysql
+        mode: '0644'
+
+    - name: Instanciar a base de dados MariaDB
+      shell: "{{ mariadb_symlink }}/scripts/mysql_install_db --user=mysql --datadir={{ mariadb_data_dir }}"
+      args:
+        creates: "{{ mariadb_data_dir }}/mysql"
+
+    - name: Criar serviço systemd para o MariaDB # outra forma de copiar um ficheiro para dentro de um host de destino
+      copy:
+        dest: /etc/systemd/system/mariadb.service
+        content: |
+          [Unit]
+          Description=MariaDB Database Service
+          After=network.target
+
+          [Service]
+          Type=forking
+          ExecStart={{ mariadb_symlink }}/bin/mysqld_safe --defaults-file={{ mariadb_conf_dir }}/my.cnf
+          ExecStop=/bin/kill -s TERM $MAINPID
+          User=mysql
+          Group=mysql
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload systemd para incluir o novo serviço
+      systemd:
+        daemon_reload: true
+
+    - name: Iniciar e habilitar o serviço MariaDB
+      systemd:
+        name: mariadb
+        enabled: true
+        state: started

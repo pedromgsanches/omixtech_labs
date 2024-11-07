@@ -1,0 +1,45 @@
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  # Configuração comum
+  config.vm.box = "ol8"
+
+  # Servidor dbsrv01
+  config.vm.define "dbsrv01" do |dbsrv01|
+    dbsrv01.vm.hostname = "dbsrv01"
+    dbsrv01.vm.network "private_network", ip: "192.168.50.11"
+    dbsrv01.vm.provider "virtualbox" do |vb|
+      vb.memory = "2048"
+    end
+  end
+
+  # Servidor dbsrv02
+  config.vm.define "dbsrv02" do |dbsrv02|
+    dbsrv02.vm.hostname = "dbsrv02"
+    dbsrv02.vm.network "private_network", ip: "192.168.50.12"
+    dbsrv02.vm.provider "virtualbox" do |vb|
+      vb.memory = "2048"
+    end
+  end
+
+  # Servidor dbsrv03
+  config.vm.define "dbsrv03" do |dbsrv03|
+    dbsrv03.vm.hostname = "dbsrv03"
+    dbsrv03.vm.network "private_network", ip: "192.168.50.13"
+    dbsrv03.vm.provider "virtualbox" do |vb|
+      vb.memory = "2048"
+    end
+  end
+
+  # Servidor dbatools
+  config.vm.define "dbatools" do |dbatools|
+    dbatools.vm.hostname = "dbatools"
+    dbatools.vm.network "private_network", ip: "192.168.50.14"
+    dbatools.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+    end
+  end
+
+end
+
