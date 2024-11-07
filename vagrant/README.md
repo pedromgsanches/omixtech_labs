@@ -1,4 +1,4 @@
-### Tutorial "10min" Vagrant // how to
+# Tutorial "10min" Vagrant // how to
 
 Criar quatro servidores com recurso a vagrant, imagem oficial "Oracle Linux 8".
 
