@@ -1,9 +1,9 @@
-## Tutorial "10min" Vagrant // how to
+### Tutorial "10min" Vagrant // how to
 
 Criar quatro servidores com recurso a vagrant, imagem oficial "Oracle Linux 8".
 
 
-# Como executar o exemplo do tutorial:
+## Como executar o exemplo do tutorial:
 
 1- Download + instalar vagrant: https://www.vagrantup.com/
 
@@ -16,7 +16,7 @@ Criar quatro servidores com recurso a vagrant, imagem oficial "Oracle Linux 8".
 4- $ vagrant ssh <máquina-como-descrito-no-Vagrantfile>
 
 
-# Para criarmos apenas um servidor e mais rápido:
+## Para criarmos apenas um servidor e mais rápido:
 
 $ vagrant init oraclelinux/8 https://oracle.github.io/vagrant-projects/boxes/oraclelinux/8.json
 
